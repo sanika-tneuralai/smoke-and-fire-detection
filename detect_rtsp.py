@@ -7,8 +7,8 @@ from ultralytics import YOLO
 import numpy as np
 
 # ---------- CONFIG ----------
-WEIGHTS = "runs/train/smoke_fire/exp2/weights/best.pt"  # update after training
-RTSP_OR_VIDEO = "videos/Fire_test.mp4"  # or path to video file
+WEIGHTS = "runs/train/smoke_fire/exp/weights/best.pt"  # update after training
+RTSP_OR_VIDEO = "rtsp://user:pass@CAM_IP:554/your/stream"  # or path to video file
 OUTPUT_DIR = "detections_snapshots"
 SAVE_SNAPSHOT = True
 DISPLAY_WINDOW = True  # set False for headless servers
@@ -69,18 +69,15 @@ def main():
         cls_ids = []
         if hasattr(r, 'boxes') and len(r.boxes) > 0:
             for box in r.boxes:
-                # xyxy is (1, 4) tensor -> flatten to 4 values
-                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().tolist()
-                conf = float(box.conf[0].cpu().numpy())
-                cid = int(box.cls[0].cpu().numpy())
-
-                boxes.append((x1, y1, x2, y2))
+                x1, y1, x2, y2 = box.xyxy.cpu().numpy().tolist()
+                conf = float(box.conf.cpu().numpy())
+                cid = int(box.cls.cpu().numpy())
+                boxes.append((x1,y1,x2,y2))
                 scores.append(conf)
                 cls_ids.append(cid)
 
                 # update history
                 detect_history.setdefault(cid, deque(maxlen=MAX_HISTORY)).append(time.time())
-
 
         # draw detections
         draw_boxes(frame, boxes, scores, cls_ids, class_names)
